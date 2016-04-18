@@ -406,7 +406,7 @@ static int lm3533_led_set(struct lm3533_led_data *led,unsigned long brightness)
 					break;
 				case SNS_GB:	//110
 					BANK_ENABLE = BANK_ENABLE | 24; //011000
-					break
+					break;
 				case SNS_R:	//001
 					BANK_ENABLE = BANK_ENABLE | 4; //000100
 					break;
