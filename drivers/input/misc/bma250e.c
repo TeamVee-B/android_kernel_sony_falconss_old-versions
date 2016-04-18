@@ -678,7 +678,6 @@ static int bma250e_probe(struct i2c_client* client, const struct i2c_device_id* 
 	if(sensor_device_register(&client->dev, &BMA250E))
 		goto err;
 
-	postoffice_registerAddress(&address);
 	accelerometer_readAxisOffset(20000);
 
 	sDump_debug(BMA250E.debugLevel, "%s --\n", __func__);
@@ -701,7 +700,6 @@ static int bma250e_remove(struct i2c_client* client)
 
 	bma250e_disable();
 	destroy_workqueue(Accelerometer_WorkQueue);
-	postoffice_unregisterAddress(&address);
 	sensor_device_unregister(&BMA250E);
 	input_unregister_device(data->input);
 	kfree(data);
