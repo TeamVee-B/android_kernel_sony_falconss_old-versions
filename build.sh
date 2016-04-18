@@ -254,7 +254,7 @@ case $x in
 	3) maindevice;;
 	4) maintoolchain;;
 	5) buildprocess;;
-	6) zippackage;;
+	6) echo "Caution, this kernel is supposed to be only for Custom Android, the RAMDisk here is for Stock"; sleep 5; zippackage;;
 	7) updatedefconfig;;
 	8) adbcopy;;
 	9) echo "$x - Rebooting to Recovery..."; adb reboot recovery;;

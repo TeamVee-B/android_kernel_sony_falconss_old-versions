@@ -53,7 +53,7 @@ busybox chmod 644 /system/etc/firmware/wlan/prima/WCNSS_cfg.dat
 cp /tmp/kernel/wifi/WCNSS_qcom_* /data/misc/wifi/WCNSS_qcom_*
 busybox chmod 660 /data/misc/wifi/WCNSS_qcom_*
 
-ui_print "Flashing Falcon SS Custom Kernel!"
+ui_print "Flashing CAFKernel!"
 dd if=/tmp/kernel/boot.img of=/dev/block/platform/msm_sdcc.1/by-name/boot
 
 umount /system
