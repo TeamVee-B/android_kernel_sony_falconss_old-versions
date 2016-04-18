@@ -20,6 +20,7 @@
 #include <linux/sensors_mctl.h>
 #include <linux/sensor_mgr.h>
 #include <mach/oem_rapi_client.h>
+#include <linux/postoffice.h>
 
 // Smoothed raw data
 // FILTER_SIZE must be 2^N, which N >= 0 and Integer
@@ -77,6 +78,7 @@ static bool accelerometer_resetAxisOffset(s16 x, s16 y, s16 z)
 	Package* package = kzalloc(sizeof(Package), GFP_KERNEL);
 	package->category = WGSensorOffset;
 	memcpy(package->content, &offset, sizeof(AccelerometerAxisOffset));
+	postoffice_sendPackage(package);
 	kfree(package);
 
 	return true;
@@ -86,6 +88,7 @@ static bool accelerometer_readAxisOffset(const uint32_t msleep)
 {
 	Package* package = kzalloc(sizeof(Package), GFP_KERNEL);
 	package->category = RGSensorOffset;
+	postoffice_sendPackageDelayed(package, msleep);
 	kfree(package);
 	return true;
 }

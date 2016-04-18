@@ -838,6 +838,7 @@ static int epl6881_probe(struct i2c_client* client, const struct i2c_device_id* 
 
 	proximity_readThreshold(THRESHOLD_LEVEL);// It needs to avoid deadlock.
 
+	postoffice_registerAddress(&address);
 	light_readConst(20000);
 
 	epl6881_setSleepTime();
@@ -876,6 +877,7 @@ static int epl6881_remove(struct i2c_client* client)
 	PLSensor* data = i2c_get_clientdata(client);
 
 	destroy_workqueue(PLSensor_WorkQueue);
+	postoffice_unregisterAddress(&address);
 	sensor_device_unregister(&p_dev);
 	sensor_device_unregister(&l_dev);
 	input_unregister_device(data->proximity.input);
