@@ -1,4 +1,9 @@
 language: c
 script:
 - git clone -b "google_gcc" "https://github.com/TeamVee/android_prebuilt_toolchains" "../android_prebuilt_toolchains"
-- source build.sh <<< "3415q"
+- source build.sh <<< "41q"
+- export defconfig="cyanogenmod_falconss_defconfig"
+- export name="XperiaE1"
+- make $defconfig &> /dev/null | echo "$x - $name, setting..."
+- export NR_CPUS=$(($(grep -c ^processor /proc/cpuinfo) + 1))
+- make -j${NR_CPUS}
