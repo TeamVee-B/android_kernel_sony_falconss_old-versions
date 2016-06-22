@@ -12,34 +12,49 @@ if [ ${#} == "0" ]; then
 	echo "    To use this script"
 	echo
 else
-	echo $(tput bold)$(tput setaf 1)"The number of patch is: ${#}"$(tput sgr0)
+	echo $(tput bold)$(tput setaf 1)"Number of patch's: ${#}"$(tput sgr0)
 	c="0"
 	for link in ${@}; do
 		c=$[$c+1]
 		echo
 		echo $(tput bold)$(tput setaf 1)"Patch #${c}"$(tput sgr0)
-		echo
 		if [[ $link == *".patch" ]]; then
 			nl=$link
 		else
 			nl=$link.patch
 		fi
-		curl $nl | git am
-		if [ $? == "0" ]; then
-			echo
-			git log --oneline -n 1
-			echo $(tput bold)$(tput setaf 2)"Patch (${c}/${#})"$(tput sgr0)
-			echo
-		else
-			echo
-			echo $(tput bold)$(tput setaf 1)"Something not worked good in patch #${#}"
-			echo "Aborting 'git am' process"
-			if [ ${#} -gt "1" ]; then
-				echo
-				echo "Passing to next patch"
+		patch_filename="patch.sh-${c}.patch"
+		echo "- Downloading..."
+		curl -# -o $patch_filename $nl
+		if [ -f $patch_filename ]
+		then
+			echo "- Patching..."
+			git am $patch_filename
+			if [ $? == "0" ]; then
+				echo $(tput bold)$(tput setaf 2)"Patch (${c}/${#})"$(tput sgr0)
+			else
+				echo $(tput bold)$(tput setaf 1)"Something not worked good in patch #${c}"
+				echo "Aborting 'git am' process"
+				if ! [ "${c}" == "${#}" ]
+				then
+					if [ ${#} -gt "1" ]; then
+						echo
+						echo "Passing to next patch"
+					fi
+				fi
+				echo $(tput sgr0)
+				git am --abort
 			fi
-			echo $(tput sgr0)
-			git am --abort
+		else
+			echo "Patch not downloaded, check internet or link"
+			if ! [ "${c}" == "${#}" ]
+			then
+				if [ ${#} -gt "1" ]; then
+					echo
+					echo "Passing to next patch"
+				fi
+			fi
 		fi
+		rm -rf $patch_filename
 	done
 fi
