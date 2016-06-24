@@ -119,41 +119,6 @@ int autoMinValue = DEFAULT_THRESHOLD;
    Input device interface
  * ---------------------------------------------------------------------------------------- */
 
-static void mailbox(const Package* const package)
-{
-	bool err = !strncmp(package->content, "ERROR", strlen("ERROR"));
-	bool active = strncmp(package->content, "NOTACTIVE", strlen("NOTACTIVE"));
-	PLSensor* data = i2c_get_clientdata(this_client);
-	Light* light = (data) ? &data->light: NULL;
-	if(!light){
-		sDump_alert(l_dev.debugLevel, "%s Light is NULL\n", __func__);
-		return;
-	}
-	switch(package->category){
-		case RLSensorConst:
-			if(!active){
-				light_resetConst(DEFAULT_LIGHT_CONST);
-				break;
-			}
-		case WLSensorConst:
-			if(!err){
-				mutex_lock(&data->mutex);
-				memcpy(&(light->sdata.Const), package->content, sizeof(int));
-				mutex_unlock(&data->mutex);
-			}
-			sDump_notice(l_dev.debugLevel, "Light Const : %d\n", light->sdata.Const);
-			break;
-		default:
-			break;
-	}
-}
-
-static deliverAddress address = {
-	.name				= "PLsensor",
-	.mailbox			= mailbox,
-	.receivedCategory	= RLSensorConst | WLSensorConst,
-};
-
 static bool epl6881_setSleepTime(void)
 {
 	PLSensor* data = i2c_get_clientdata(this_client);
@@ -838,7 +803,6 @@ static int epl6881_probe(struct i2c_client* client, const struct i2c_device_id* 
 
 	proximity_readThreshold(THRESHOLD_LEVEL);// It needs to avoid deadlock.
 
-	postoffice_registerAddress(&address);
 	light_readConst(20000);
 
 	epl6881_setSleepTime();
@@ -877,7 +841,6 @@ static int epl6881_remove(struct i2c_client* client)
 	PLSensor* data = i2c_get_clientdata(client);
 
 	destroy_workqueue(PLSensor_WorkQueue);
-	postoffice_unregisterAddress(&address);
 	sensor_device_unregister(&p_dev);
 	sensor_device_unregister(&l_dev);
 	input_unregister_device(data->proximity.input);

@@ -126,43 +126,6 @@ static sensor_device BMA250E = {
    Input device interface
  * ---------------------------------------------------------------------------------------- */
 
-static void mailbox(const Package* const package)
-{
-	bool err = !strncmp(package->content, "ERROR", strlen("ERROR"));
-	bool active = strncmp(package->content, "NOTACTIVE", strlen("NOTACTIVE"));
-	Accelerometer* data = i2c_get_clientdata(this_client);
-	if(!data){
-		sDump_alert(BMA250E.debugLevel, "%s Accelerometer is NULL\n", __func__);
-		return;
-	}
-	switch(package->category){
-		case RGSensorOffset:
-			if(!active){
-				// Do reset.
-				// It means that accelerometer axis offset
-				// hasn't been setted yet.
-				accelerometer_resetAxisOffset(0, 0, 0);
-				break;
-			}
-		case WGSensorOffset:
-			if(!err){
-				mutex_lock(&data->mutex);
-				memcpy(&(data->odata), package->content, sizeof(AccelerometerAxisOffset));
-				mutex_unlock(&data->mutex);
-			}
-			sDump_notice(BMA250E.debugLevel, "Accelerometer AxisOffset ==> X : %d, Y : %d, Z : %d\n", data->odata.X, data->odata.Y, data->odata.Z);
-			break;
-		default:
-			break;
-	}
-}
-
-static deliverAddress address = {
-	.name				= "AccelerometerSensor",
-	.mailbox			= mailbox,
-	.receivedCategory	= RGSensorOffset | WGSensorOffset,
-};
-
 #ifdef ACCELEROMETER_IRQ_USED
 static irqreturn_t bma250e_irq(int irq, void* handle)
 {
@@ -678,7 +641,6 @@ static int bma250e_probe(struct i2c_client* client, const struct i2c_device_id* 
 	if(sensor_device_register(&client->dev, &BMA250E))
 		goto err;
 
-	postoffice_registerAddress(&address);
 	accelerometer_readAxisOffset(20000);
 
 	sDump_debug(BMA250E.debugLevel, "%s --\n", __func__);
@@ -701,7 +663,6 @@ static int bma250e_remove(struct i2c_client* client)
 
 	bma250e_disable();
 	destroy_workqueue(Accelerometer_WorkQueue);
-	postoffice_unregisterAddress(&address);
 	sensor_device_unregister(&BMA250E);
 	input_unregister_device(data->input);
 	kfree(data);
