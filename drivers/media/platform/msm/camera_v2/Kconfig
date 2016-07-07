@@ -221,6 +221,7 @@ config S5K4E1
 config S5K5CA
 	bool "Sensor S5K5CA (YUV 3MP)"
 	depends on MSMB_CAMERA
+	select VIDEOBUF2_VMALLOC
 	---help---
 		S5K5CA is YUV sensor.
 
