@@ -31,6 +31,7 @@
 #include <asm/hardware/gic.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/time.h>
+#include <asm/setup.h>
 #include <mach/board.h>
 #include <mach/gpiomux.h>
 #include <mach/msm_iomap.h>
@@ -81,7 +82,7 @@ static struct persistent_ram_descriptor pr_desc = {
 #endif
 };
 
-static struct persistent_ram msm_pram = {
+static struct persistent_ram persist_ram = {
 	.size = MSM_PERSISTENT_RAM_SIZE,
 	.num_descs = 1,
 	.descs = &pr_desc
@@ -89,11 +90,22 @@ static struct persistent_ram msm_pram = {
 
 static void reserve_persistent_ram(void)
 {
-	struct membank *mb = &meminfo.bank[meminfo.nr_banks - 1];
-	unsigned long bank_end = mb->start + mb->size;
+	int ret;
+	struct membank *bank;
 
-	msm_pram.start = bank_end - MSM_PERSISTENT_RAM_SIZE;
-	persistent_ram_early_init(&msm_pram);
+	if (meminfo.nr_banks < 2) {
+		pr_err("%s: not enough membank\n", __func__);
+		return;
+	}
+
+	bank = &meminfo.bank[0];
+	persist_ram.start = bank->start + bank->size + MSM_PERSISTENT_RAM_SIZE;
+
+	ret = persistent_ram_early_init(&persist_ram);
+	if (!ret)
+		pr_info("%s: Persistent RAM reserved at 0x%x\n", __func__, persist_ram.start);
+	else
+		pr_err("%s: Failed to reserve space for Persistent RAM at 0x%x\n", __func__, persist_ram.start);
 }
 #endif
 
@@ -112,7 +124,6 @@ static void __init msm8610_reserve(void)
 #ifdef CONFIG_ANDROID_PERSISTENT_RAM
 	reserve_persistent_ram();
 #endif
-
 	of_scan_flat_dt(dt_scan_for_memory_reserve, NULL);
 }
 
