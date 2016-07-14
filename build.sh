@@ -149,6 +149,13 @@ then
 		cp zip-creator/base/unpackbootimg ${zip_out}/
 		cp arch/${ARCH}/boot/zImage ${zip_out}/
 
+		if [ "$(cat .config | grep '# CONFIG_MODULES is not set' | wc -l)" == "0" ]
+		then
+			mkdir ${zip_out}/modules
+			find . -name *.ko | xargs cp -a --target-directory=${zip_out}/modules/ &> /dev/null
+			${CROSS_COMPILE}strip --strip-unneeded ${zip_out}/modules/*.ko
+		fi
+
 		echo "${builder}" >> ${zip_out}/device.prop
 		echo "${custom_kernel} ${custom_kernel_branch}" >> ${zip_out}/device.prop
 		echo "${device_name}" >> ${zip_out}/device.prop
